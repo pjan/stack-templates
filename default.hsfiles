@@ -1,1 +1,568 @@
 {-# START_FILE package.yaml #-}
+name:         {{name}}
+version:      0.0.1.0
+github:       "{{github-username}}{{^github-username}}githubuser{{/github-username}}/{{name}}"
+license:      MIT
+license-file: LICENSE.md
+author:       "{{author-name}}{{^author-name}}Author name here{{/author-name}}"
+maintainer:   "{{author-email}}{{^author-email}}example@example.com{{/author-email}}"
+copyright:    "{{copyright}}{{^copyright}}{{year}}{{^year}}2018{{/year}} {{author-name}}{{^author-name}}Author name here{{/author-name}}{{/copyright}}"
+
+# Metadata used when publishing your package
+# synopsis:     Short description of your package
+# category:     {{category}}{{^category}}Web{{/category}}
+
+description:  Please see the README on Github at <https://github.com/{{github-username}}{{^github-username}}githubuser{{/github-username}}/{{name}}#readme>
+
+flags:
+  documentation:
+    description: link documentation to source
+    manual: yes
+    default: no
+
+extra-source-files:
+- CHANGELOG.md
+- LICENSE.md
+- README.md
+- package.yaml
+
+ghc-options:
+- -Wall
+- -Wcompat
+- -Wincomplete-record-updates
+- -Wincomplete-uni-patterns
+- -Wredundant-constraints
+
+dependencies:
+- base >= 4.7 && < 5
+
+library:
+  source-dirs: lib
+
+  when:
+  - condition: flag(documentation)
+    dependencies: hscolour
+
+  dependencies:
+    - async
+    - bytestring
+    - containers
+    - deepseq
+    - directory
+    - filepath
+    - mtl
+    - optparse-applicative
+    - process
+    - stm
+    - text
+    - transformers
+    - vector
+    - unix
+    - unordered-containers
+
+executables:
+  {{name}}-exe:
+    main:        Main.hs
+    source-dirs: app
+    ghc-options:
+    - -threaded
+    - -rtsopts
+    - -with-rtsopts=-N
+    dependencies:
+    - {{name}}
+
+benchmarks:
+  {{name}}-benchmark:
+    main:        Bench.hs
+    source-dirs: bench
+    ghc-options:
+    - -threaded
+    - -rtsopts
+    - -with-rtsopts=-N
+    dependencies:
+    - {{name}}
+    - criterion
+
+tests:
+  {{name}}-test:
+    main:        Main.hs
+    source-dirs: test
+    ghc-options:
+    - -threaded
+    - -rtsopts
+    - -with-rtsopts=-N
+    dependencies:
+    - {{name}}
+    - tasty
+    - tasty-hunit
+    - tasty-expected-failure
+    - hedgehog
+    - tasty-hedgehog
+
+  {{name}}-doctest:
+    main:        doctest.hs
+    source-dirs: test
+    ghc-options:
+    - -threaded
+    - -rtsopts
+    - -with-rtsopts=-N
+    dependencies:
+    - doctest
+
+{-# START_FILE .gitattributes #-}
+/.gitattributes export-ignore
+/.gitignore     export-ignore
+/.travis.yml    export-ignore
+
+{-# START_FILE .gitignore #-}
+dist
+dist-*
+cabal-dev
+*.o
+*.hi
+*.chi
+*.chs.h
+*.dyn_o
+*.dyn_hi
+.hpc
+.hsenv
+.cabal-sandbox/
+cabal-dev
+cabal.config
+cabal.sandbox.config
+flycheck_*.hs
+*.prof
+*.aux
+*.hp
+*.eventlog
+*.swp
+*.tag
+*~
+/TAGS
+/tags
+/_release/
+/.idea/
+/*.iml
+.stack-wrk/
+cabal.project.local
+cabal.project.local~
+.HTF/
+.ghc.environment.*
+result
+{{name}}.cabal
+
+{-# START_FILE .travis.yml #-}
+language: nix
+
+script:
+- nix-build
+
+{-# START_FILE CHANGELOG.md #-}
+# Change log
+
+{{ name }} uses [Semantic Versioning][].
+The change log is available through the [releases on GitHub][].
+
+[Semantic Versioning]: http://semver.org/spec/v2.0.0.html
+[releases on GitHub]: https://github.com/{{github-username}}{{^github-username}}githubuser{{/github-username}}/{{ name }}/releases
+
+## v0.0.1.0
+
+* Created.
+
+{-# START_FILE LICENSE.md #-}
+[The MIT License (MIT)][]
+
+Copyright (c) {{year}}{{^year}}2018{{/year}} {{author-name}}{{^author-name}}Author name here{{/author-name}}
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of
+this software and associated documentation files (the "Software"), to deal in
+the Software without restriction, including without limitation the rights to
+use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
+of the Software, and to permit persons to whom the Software is furnished to do
+so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+[The MIT License (MIT)]: https://opensource.org/licenses/MIT
+
+{-# START_FILE README.md #-}
+# [{{name}}][]
+
+{-# START_FILE Setup.hs #-}
+import Distribution.Simple (defaultMain)
+
+main :: IO ()
+main = defaultMain
+
+{-# START_FILE bench/Bench.hs #-}
+import Criterion.Main
+
+import Lib (inc)
+
+incBench :: [Benchmark]
+incBench =
+  [ bench "inc 41" (whnf inc (41 :: Int))
+  , bench "inc 4141" (whnf inc (4141 :: Int))
+  ]
+
+main :: IO ()
+main = defaultMain
+  [ bgroup "inc" incBench
+  ]
+
+{-# START_FILE lib/Lib.hs #-}
+-- | Example of a library file. It is also used for testing the test suites.
+module Lib
+  ( inc
+  ) where
+
+-- | Increment a 'Num' value.
+--
+-- >>> let answer = 42 :: Int
+-- >>> let prev = answer - 1
+-- >>> inc prev
+-- 42
+inc :: Num a => a -- ^ value to increment
+             -> a -- ^ result
+inc = (+ 1)
+
+{-# START_FILE app/Main.hs #-}
+module Main
+  ( main
+  ) where
+
+import qualified Lib
+
+main :: IO ()
+main = print . Lib.inc $ (41 :: Int)
+
+{-# START_FILE test/Main.hs #-}
+module Main where
+
+import           Hedgehog
+import qualified Hedgehog.Gen        as Gen
+import qualified Hedgehog.Range      as Range
+import           Test.Tasty
+import           Test.Tasty.Hedgehog
+import           Test.Tasty.HUnit
+
+import           Lib                 (inc)
+
+main :: IO ()
+main = defaultMain $ testGroup "All tests" tests
+
+tests :: [TestTree]
+tests =
+  [ testGroup "HedgeHog tests" hhTests
+  , testGroup "Unit tests" huTests
+  ]
+
+-- Property tests
+prop_succ :: Property
+prop_succ =
+  property $ do
+    n <- forAll $ Gen.int Range.constantBounded
+    inc n === succ n
+
+prop_pred :: Property
+prop_pred =
+  property $ do
+    n <- forAll $ Gen.int Range.constantBounded
+    inc (negate n) === negate (pred n)
+
+hhTests :: [TestTree]
+hhTests =
+  [ testProperty "Increment" prop_succ
+  , testProperty "Decrement" prop_pred
+  ]
+
+-- Unit tests
+case_inc_below :: Assertion
+case_inc_below = inc 41 @?= (42 :: Int)
+
+case_dec_above :: Assertion
+case_dec_above = negate (inc (negate 43)) @?= (42 :: Int)
+
+huTests :: [TestTree]
+huTests =
+  [ testCase "Increment below TheAnswer" case_inc_below
+  , testCase "Decrement abvove TheAnswer" case_dec_above
+  ]
+
+
+{-# START_FILE test/doctest.hs #-}
+module Main where
+
+import Test.DocTest
+
+main :: IO ()
+main = doctest ["lib"]
+
+{-# START_FILE default.nix #-}
+import ./nix/package.nix {
+    root = ./.;
+
+    ghcVersion = "ghc822";
+
+    withHoogle = true;
+
+    profiling = false;
+
+    # shellDepends = pkgs: haskellPkgs: [];
+
+    pinnedPkgsPath = ./nix/nixpkgs.json;
+
+    overrides = pkgs: { };
+
+    haskellOverrides = {
+
+      skipTests = [
+        "ghc-mod"
+      ];
+
+      jailbreak = [
+        "cabal-helper"
+        "ghc-mod"
+      ];
+
+      skipHaddock = [
+        "cabal-helper"
+        "ghc-mod"
+      ];
+
+      justStaticExecutables = [
+        "ghc-mod"
+        "brittany"
+      ];
+
+      path = ./nix/overrides/haskell;
+
+      manual = haskellLib: self: super: { };
+
+    };
+
+    results = {
+      pkgs = [ ];
+      haskellPkgs = [ ];
+    };
+
+}
+
+{-# START_FILE nix/package.nix #-}
+{ root,
+  ghcVersion,
+  withHoogle       ? true,
+  profiling        ? false,
+  shellDepends     ? pkgs: haskellPkgs: with pkgs; with haskellPkgs; [
+    brittany
+    cabal-helper
+    cabal-install
+    ghc-mod
+    haskdogs
+    hasktags
+    hlint
+    hpack
+    lushtags
+    stylish-haskell
+  ],
+  pinnedPkgsPath   ? ./nixpkgs.json,
+  overrides        ? pkgs: { },
+  haskellOverrides ? {
+    skipTests = [];
+    jailbreak = [];
+    skipHaddock = [];
+    justStaticExecutables = [];
+    path = ./overrides/haskell;
+    manual = haskellLib: super: self: {};
+  },
+  results ?  {
+    pkgs = [];
+    haskellPkgs = [];
+  }
+} :
+
+let
+
+  name = builtins.baseNameOf root;
+
+  mkPkgs = path:
+    let
+      bootstrap = import <nixpkgs>;
+    in
+      if (builtins.pathExists path)
+      then
+        let
+          pkgs = bootstrap { };
+          json = builtins.fromJSON (builtins.readFile path);
+          src = pkgs.fetchFromGitHub {
+            owner = "NixOS";
+            repo  = "nixpkgs";
+            inherit (json) rev sha256;
+          };
+        in (import src)
+      else bootstrap;
+
+  hOverrides = {
+    skipTests             = haskellOverrides.skipTests or [];
+    jailbreak             = haskellOverrides.jailbreak or [];
+    skipHaddock           = haskellOverrides.skipHaddock or [];
+    justStaticExecutables = haskellOverrides.justStaticExecutables or [];
+    path                  = haskellOverrides.path or ./overrides/haskell;
+    manual                = haskellOverrides.manual or (_: _: _: {});
+  };
+
+  mkEnv = {
+    allowUnfree ? true,
+    withHoogle  ? false,
+    profiling   ? false,
+    shell       ? false
+  } :
+  let
+    config = {
+      allowUnfree = allowUnfree;
+
+      packageOverrides = pkgs: rec {
+        haskell = pkgs.haskell // {
+          packages = pkgs.haskell.packages // {
+            "${ghcVersion}" =
+              let
+                configOverrides = self: super: {
+                  ghc =
+                    if withHoogle
+                    then super.ghc // { withPackages = super.ghc.withHoogle; }
+                    else super.ghc;
+
+                  mkDerivation = args: super.mkDerivation (args // {
+                    enableLibraryProfiling = profiling;
+                  });
+                };
+
+                rootOverride = self: super: {
+                  "${name}" = self.callCabal2nix "${name}" root { };
+                };
+
+                generatedOverrides = self: super:
+                  if (builtins.pathExists hOverrides.path)
+                  then
+                    let
+                      toPackage = file: _: {
+                        name  = builtins.replaceStrings [ ".nix" ] [ "" ] file;
+                        value = self.callPackage (hOverrides.path + "/${file}") { };
+                      };
+                    in pkgs.lib.mapAttrs' toPackage (builtins.readDir hOverrides.path)
+                  else {};
+
+                makeOverrides = modifier: names: self: super:
+                  let
+                    toPackage = name: {
+                      inherit name;
+                      value = modifier super.${name};
+                    };
+                  in builtins.listToAttrs (map toPackage names);
+
+                manualOverrides = hOverrides.manual haskellLib;
+
+                shellOverride = self: super:
+                  if (shell)
+                  then {
+                    "${name}" =
+                      haskellLib.overrideCabal super."${name}"
+                      ( drv: {
+                        doBenchmark = true;
+                        buildDepends = shellDepends pkgs super;
+                      });
+                    }
+                  else {};
+
+                haskellLib = pkgs.haskell.lib;
+
+              in with haskellLib;
+                pkgs.haskell.packages."${ghcVersion}".override {
+                  overrides = composeExtensions [
+                    configOverrides
+                    generatedOverrides
+                    (makeOverrides dontCheck hOverrides.skipTests)
+                    (makeOverrides doJailbreak hOverrides.jailbreak)
+                    (makeOverrides dontHaddock hOverrides.skipHaddock)
+                    (makeOverrides justStaticExecutables hOverrides.justStaticExecutables)
+                    rootOverride
+                    manualOverrides
+                    shellOverride
+                  ];
+                };
+          };
+        };
+      } // overrides pkgs;
+    };
+
+    pkgs = mkPkgs pinnedPkgsPath { inherit config; };
+
+    lib = pkgs.lib;
+
+    haskellPkgs = pkgs.haskell.packages."${ghcVersion}";
+
+    haskellLib = pkgs.haskell.lib;
+
+    resultSet =
+      (toResultSet pkgs (results.pkgs or [])) //
+      (toResultSet haskellPkgs ((results.haskellPkgs or []) ++ [ name ]));
+
+    ### Utility functions
+
+    /* enableExecutableProfiling modifies a haskell package to enable
+       profiling of the executables in the build product.
+    */
+    enableExecutableProfiling = drv: haskellLib.overrideCabal drv (drv: { enableExecutableProfiling = true; });
+
+    /* a composeExtensions version for working with a list of extensions
+    */
+    composeExtensions = pkgs.lib.fold pkgs.lib.composeExtensions (_: _: {});
+
+    toResultSet = pkgs: names:
+      lib.foldl (acc: name: acc // { "${name}" = pkgs."${name}"; }) {} names;
+
+  in {
+
+    inherit pkgs haskellPkgs resultSet;
+
+    ghc = haskellPkgs.ghc;
+
+  };
+
+  shellEnv = mkEnv {
+    withHoogle = withHoogle;
+    profiling  = profiling;
+    shell      = true;
+  };
+
+  releaseEnv = mkEnv {
+    withHoogle = false;
+    shell      = false;
+  };
+
+  inNixShell = shellEnv.pkgs.lib.inNixShell;
+
+  shellDrv = shellEnv.resultSet."${name}".env.overrideAttrs ( oldAttrs: {
+    shellHook = ''
+      export NIX_GHC_LIBDIR="$(dirname $(type -p ghc))/../lib/ghc-${shellEnv.ghc.version}"
+      export cabal_helper_libexecdir=$(dirname $(which ghc))
+    '';
+  } );
+
+  releaseDrvs = releaseEnv.resultSet;
+
+in
+  if inNixShell
+  then shellDrv
+  else releaseDrvs
+
